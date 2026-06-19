@@ -1,7 +1,7 @@
 #include"../include/DeepSeekProvider.h"
 #include"../include/until/mylog.h"
 #include<jsoncpp/json/json.h>
-#include<istringstream>
+#include<sstream>
 
 namespace ai_chat_sdk
 {
@@ -35,7 +35,7 @@ namespace ai_chat_sdk
         }
         std::string DeepSeekProvider::getModelName() const
         {
-            return "deepseek-v4-chat";
+            return "deepseek-v4-flash";
         }
         std::string DeepSeekProvider::getModelDesc() const
         {
@@ -45,69 +45,73 @@ namespace ai_chat_sdk
         {
             if(isAvailable())
             {
-                double template = 0.7;
+                double temperature = 0.7;
                 int max_tokens = 2048;
-                if(requestParam.find("template") != requestParam.end())
+                if(requestParam.find("temperature") != requestParam.end())
                 {
-                    template = std::stod(requestParam["template"]);
+                    temperature = std::stod(requestParam.at("temperature"));
                 }
                 if(requestParam.find("max_tokens") != requestParam.end())
                 {
-                    max_tokens = std::stoi(requestParam["max_tokens"]);
+                    max_tokens = std::stoi(requestParam.at("max_tokens"));
                 }
 
                 Json::Value messageArray;
                 for(auto& msg : messages)
                 {
                     Json::Value message;
-                    message["role"] = msg.role;
-                    message["content"] = msg.content;
+                    message["role"] = msg._role;
+                    message["content"] = msg._content;
                     messageArray.append(message);
                 }
 
                 Json::Value request;
                 request["model"] = getModelName();
                 request["messages"] = messageArray;
-                request["temperature"] = template;
+                request["temperature"] = temperature;
                 request["max_tokens"] = max_tokens;
 
                 //序列化
                 Json::StreamWriterBuilder writerBuilder;
                 writerBuilder["indentation"] = "";
                 std::string requestBodyStr = Json::writeString(writerBuilder, request);
-
+                INFO("DeepSeekProvider sendMessage requestBody: {}", requestBodyStr);
                 //创建http客户端
-                httplib::Client client(_endPoint);
-                client.SetContentTimeout(30.0);
-                client.SetReadTimeout(60.0);
+                httplib::Client client(_endPoint.c_str());
+                client.set_connection_timeout(30.0);
+                client.set_read_timeout(60.0);
 
                 //创建请求头
-                httplib::Headers headers;
-                headers["Authorization"] = "Bearer " + _apiKey;
-                headers["Content-Type"] = "application/json";
+                httplib::Headers headers{
+                    {"Authorization", "Bearer " + _apiKey},
+                    {"Content-Type", "application/json"}
+                };
 
                 //发起Post请求
-                httplib::Result response = client.Post("/chat/completions" , headers , requestBodyStr , "application/json");
-                
+                auto  response = client.Post("/chat/completions" , headers , requestBodyStr , "application/json");
+                INFO("DeepSeekProvider sendMessage POST request success, status : {}", response->status);
+                INFO("DeepSeekProvider sendMessage POST request success, body : {}", response->body);
                 //解析模型的响应结果
-                if(response.status == 200)
+                if(response->status == 200)
                 {
-                    std::istringstream responseStream(response.body);
+                    std::istringstream responseStream(response->body);
                     Json::Value responseBody;
                     Json::CharReaderBuilder readerBuilder;
                     std::string parseError;
-                    if(!Json::parseFromStream(readerBuilder, responseStream , responseBody , &parseError))
+                    if(!Json::parseFromStream(readerBuilder, responseStream , &responseBody , &parseError))
                     {
-                        ERR("parse json failed: %s" , parseError.c_str());
+                        ERR("parse json failed: {}" , parseError.c_str());
                         return "";
                     }
                     //检测content字段是否存在，如果存在就返回
-                    if(response.isMember("choices") &&response["choices"].isArray())
+                    if(responseBody.isMember("choices") &&responseBody["choices"].isArray() && !responseBody["choices"].empty())
                     {
-                        auto choice = response["choices"][0];
-                        if(choice.isObject() && choice["message"].isObject()&&choice["message"]["content"].isString())
+                        auto choice = responseBody["choices"][0];
+                        if(choice.isMember("message") && choice["message"].isMember("content"))
                         {
-                            return choice["message"]["content"].asString();
+                            std::string replyContent = choice["message"]["content"].asString();
+                            INFO("DeepSeekProvider response text: {}", replyContent);
+                            return replyContent;
                         }
                     }
                 }
@@ -116,6 +120,9 @@ namespace ai_chat_sdk
             return "";
         }
         std::string DeepSeekProvider::sendMessageStream(const std::vector<Message>& messages , const std::map<std::string , std::string>& requestParam , \
-            std::function<void(const std::string& , bool)> callback);
+            const std::function<void(const std::string& , bool)> callback)
+            {
+
+            }
 
 }

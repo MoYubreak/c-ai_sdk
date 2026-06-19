@@ -1,10 +1,14 @@
 #include"../../include/until/mylog.h"
-#include<memory>
+#include <memory>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/async.h>
 namespace ns_logger
 {
     std::shared_ptr<spdlog::logger> Logger::_logger = nullptr;
     std::mutex Logger::_mutex;
-    void Logger::initLogger(std::string& loggerName , std::string& logFile , spdlog::level::level_enum logLevel)
+    void Logger::initLogger(const std::string& loggerName , const std::string& logFile , spdlog::level::level_enum logLevel)
     {
         if(_logger == nullptr)
         {
@@ -20,7 +24,7 @@ namespace ns_logger
                 }
                 else
                 {
-                    _logger = spdlog::basic_logger_mt<spdlog::async_logger>(loggerName , logFile);
+                    _logger = spdlog::basic_logger_mt<spdlog::async_factory>(loggerName , logFile);
                 }
 
                 _logger->set_pattern("%H:%M [%n][%L] %v");
@@ -28,7 +32,7 @@ namespace ns_logger
             }
         }
     }
-    std::shared_ptr<spdlog::logger> Logger::logInfo()
+    std::shared_ptr<spdlog::logger> Logger::getLogger()
     {
         return _logger;
     }

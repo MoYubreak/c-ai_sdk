@@ -1,12 +1,12 @@
 #pragma once 
 #include<string>
 #include<map>
-#include<function>
+#include<functional>
 #include<vector>
 #include"httplib.h"
 #include"common.h"
 
-namespace ai-chat-sdk
+namespace ai_chat_sdk
 {
     class LLMProvider
     {
