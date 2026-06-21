@@ -2,6 +2,30 @@
 #include<gtest/gtest.h>
 #include<memory>
 
+// TEST(DeepSeekProviderTest , sendMessage)
+// {
+//     auto deepseek = std::make_shared<ai_chat_sdk::DeepSeekProvider>();
+//     ASSERT_TRUE(deepseek != nullptr);
+
+//     std::map<std::string , std::string> modelParam;
+//     modelParam["api_Key"] = ::getenv("deepseek_apikey");
+//     modelParam["base_URL"] = "https://api.deepseek.com";
+
+//     deepseek->initModel(modelParam);
+
+//     std::vector<ai_chat_sdk::Message> messages;
+//     messages.push_back(ai_chat_sdk::Message("user" , "你好"));
+//     std::map<std::string , std::string> requestParam;
+//     requestParam["temperature"] = "0.7";
+//     requestParam["max_tokens"] = "2048";
+
+
+//     std::string response = deepseek->sendMessage(messages , requestParam);
+//     ASSERT_FALSE(response.empty());
+
+//     INFO("response: {}" , response);
+// }
+
 TEST(DeepSeekProviderTest , sendMessage)
 {
     auto deepseek = std::make_shared<ai_chat_sdk::DeepSeekProvider>();
@@ -20,11 +44,22 @@ TEST(DeepSeekProviderTest , sendMessage)
     requestParam["max_tokens"] = "2048";
 
 
-    std::string response = deepseek->sendMessage(messages , requestParam);
+    std::string response = deepseek->sendMessageStream(messages , requestParam , [](const std::string& chunk , bool isFinish)
+    {
+        if(!isFinish)
+        {
+            INFO("response: {}" , chunk);
+        }
+        else 
+        {
+            INFO("[DONE]");
+        }
+    });
     ASSERT_FALSE(response.empty());
 
     INFO("response: {}" , response);
 }
+
 int main(int argc , char** argv)
 {
     //初始化googleTest
