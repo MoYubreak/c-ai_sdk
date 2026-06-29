@@ -12,6 +12,7 @@ set(CMAKE_BUILD_TYPE Debug)
 #添加可执行文件
 add_executable(testDeepSeekProvider testDeepSeekProvider.cc
 ../src/DeepSeekProvider.cc
+../src/ChatGPTProvider.cc
 ../src/until/mylog.cc)
 #添加可执行程序的输出目录
 set_target_properties(testDeepSeekProvider PROPERTIES

@@ -27,7 +27,7 @@ namespace ai_chat_sdk
             _endPoint = baseUrl->second;
 
             _isAvailable = true;
-            return _isAvailable;
+            return true;
         }
         bool DeepSeekProvider::isAvailable() const
         {
