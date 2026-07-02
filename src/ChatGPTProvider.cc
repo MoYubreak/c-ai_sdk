@@ -126,6 +126,171 @@ namespace ai_chat_sdk
     }
     std::string ChatGPTProvider::sendMessageStream(const std::vector<Message>& messages , const std::map<std::string , std::string>& requestParam , std::function<void(const std::string& , bool)> callback)
         {
-            return "";
+           if(!isAvailable())
+            {
+                ERR("ChatGPTProvider is not available");
+                return "";
+            }
+
+            double temperature = 0.7;
+            int max_output_tokens = 2048;
+            if(requestParam.find("temperature") != requestParam.end())
+            {
+                temperature = std::stod(requestParam.at("temperature"));
+            }
+            if(requestParam.find("max_output_tokens") != requestParam.end())
+            {
+                max_output_tokens = std::stoi(requestParam.at("max_output_tokens"));
+            }
+
+             Json::Value messageArray(Json::arrayValue);
+            for(const auto& msg : messages)
+            {
+                Json::Value message;
+                message["role"] = msg._role;
+                message["content"] = msg._content;
+                messageArray.append(message);
+            }
+
+            Json::Value request;
+            request["model"] = getModelName();
+            request["input"] = messageArray;
+            request["temperature"] = temperature;
+            request["max_output_tokens"] = max_output_tokens;
+            request["stream"] = true;
+
+             //对请求体进行序列化
+            Json::StreamWriterBuilder writerBuilder;
+            writerBuilder["indentation"] = "";
+            std::string requestBodyStr = Json::writeString(writerBuilder, request);
+            INFO("DeepSeekProvider sendMessageStream requestBody: {}", requestBodyStr);
+
+            //创建http客户端
+            httplib::Client client(_endPoint.c_str());
+            client.set_connection_timeout(30.0);
+            client.set_read_timeout(300.0); //流式响应需要设置超时时间较长
+            //创建请求头
+            httplib::Headers headers{
+                {"Authorization", "Bearer " + _apiKey},
+                {"Content-Type", "application/json"},
+                {"Accept", "text/event-stream"}
+            };
+
+            //流式处理变量
+            std::string buffer; // 接收流式响应的数据块
+            bool getError = false;
+            std::string errorMsg;
+            int statusCode = 0;
+            bool streamFinish = false; //标记流式响应是否结束
+            std::string fullResponse; // 得到解析后的完整的消息
+
+            //创建并配置请求对象
+            httplib::Request req;
+            req.method = "POST";
+            req.path = "/v1/responses";
+            req.body = requestBodyStr;
+            req.headers = headers;
+
+            //设置响应处理器
+            req.response_handler = [&](const httplib::Response& response)->bool
+            {
+                if(response.status != 200)
+                {
+                    ERR("sendMessageStream failed, status code: {}" , response.status);
+                    getError = true;
+                    errorMsg = "HTTP status code: " + std::to_string(response.status);
+                    return false;
+                }
+                return true;
+            };
+
+            req.content_receiver = [&](const char* data , size_t data_length , size_t offset , size_t total_length)->bool
+                {
+                    if(getError)
+                    {
+                        ERR("sendMessageStream failed, error: {}" , errorMsg.c_str());
+                        return false;
+                    }
+
+                    buffer += std::string(data , data_length);
+                    std::string eventType;
+                    std::string eventData;
+                    size_t pos = 0;
+                    while((pos = buffer.find("\n\n")) != std::string::npos)
+                    {
+                        std::string chunk  = buffer.substr(0 , pos);
+                        buffer.erase(0 , pos + 2);
+                        if(chunk.empty() || chunk[0] == ':')
+                        continue;
+
+                        // 按 \n 分割 chunk，逐行解析 event: 和 data: 
+                        {
+                            std::istringstream lineStream(chunk);
+                            std::string line;
+                            while(std::getline(lineStream, line))
+                            {
+                                if(line.compare(0 , 6 ,"event:") == 0)
+                                {
+                                    eventType = line.substr(7);
+                                }
+                                else if(line.compare(0 , 6 ,"data: ") == 0)
+                                {
+                                    eventData = line.substr(6);
+                                }
+                            }
+                        }
+
+                        std::istringstream chunkDataStream(eventData);
+                        Json::Value eventDataJson;
+                        Json::CharReaderBuilder readerBuilder;
+                        std::string errors;
+                        if(!Json::parseFromStream(readerBuilder, chunkDataStream , &eventDataJson , &errors))
+                        {
+                            ERR("DeepSeekProvider sendMessageStream parse eventData error: {}" , errors.c_str());
+                            continue;
+                        }
+
+                        if(eventType == "response.output_text.delta")
+                        {
+                            if(eventDataJson.isMember("delta") && eventDataJson["delta"].isString())
+                            {
+                                std::string delta = eventDataJson["delta"].asString();
+                                callback(delta, false);
+                            }
+                        }
+                        else if(eventType == "response.output_item.done")
+                        {
+                            if(eventDataJson.isMember("item") && eventDataJson["item"].isObject() &&\
+                               eventDataJson["item"].isMember("content") && eventDataJson["item"]["content"].isArray()&&\
+                               !eventDataJson["item"]["content"].empty() && eventDataJson["item"]["content"][0].isMember("text")&&\
+                               eventDataJson["item"]["content"][0]["text"].isString())
+                            {
+                                fullResponse += eventDataJson["item"]["content"][0]["text"].asString();
+                            }
+                        }
+                        else if(eventType == "response.completed")
+                        {
+                            streamFinish = true;
+                            callback("", true);
+                            return true;
+                        }
+                    }
+                    return true;
+                };
+
+                //发起请求
+                httplib::Response res;
+                bool connect_ok = client.send(req , res);
+                if(!connect_ok)
+                {
+                    ERR("sendMessageStream failed");
+                    return "";
+                }
+
+                if(!streamFinish)
+                {
+                    callback("" , true);
+                }
+                return fullResponse;
         }
 }
