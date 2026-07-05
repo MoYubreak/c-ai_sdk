@@ -39,7 +39,7 @@ namespace ai_chat_sdk
         {}
     };
 
-    struct Session
+    struct Session //会话结构
     {
         std::string _sessionId;
         std::string _modelName;
