@@ -10,7 +10,7 @@ namespace ai_chat_sdk
         std::string _role;
         std::string _content;
         std::time_t _timestamp;
-        Message(const std::string& role , const std::string& content)
+        Message(const std::string& role = "", const std::string& content = "")
         :_role(role) , _content(content)
         {}
     };
