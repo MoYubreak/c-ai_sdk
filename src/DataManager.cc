@@ -254,6 +254,30 @@ namespace ai_chat_sdk
             return count;
         }
 
+        void DataManager::clearAllSessions()
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            std::string deleteSQL = R"(
+                DELETE FROM session
+            )";
+            sqlite3_stmt* stmt;
+            int rc = sqlite3_prepare_v2(_db, deleteSQL.c_str(), -1, &stmt, nullptr);
+            if(rc != SQLITE_OK)
+            {
+                ERR("DataManager::clearAllSessions: sqlite3_prepare_v2 failed: {}", sqlite3_errmsg(_db));
+                return;
+            }
+            rc = sqlite3_step(stmt);
+            if(rc != SQLITE_DONE)
+            {
+                ERR("DataManager::clearAllSessions: sqlite3_step failed: {}", sqlite3_errmsg(_db));
+                sqlite3_finalize(stmt);
+                return;
+            }
+            sqlite3_finalize(stmt);
+            INFO("clearAllSessions - 清空所有会话成功");
+        }
+
         bool DataManager::insertMessage(const std::string& sessionId , const Message& message) 
         {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -359,7 +383,7 @@ namespace ai_chat_sdk
             }
 
             sqlite3_bind_text(stmt, 1, sessionId.c_str(), -1, SQLITE_STATIC);
-            
+
             rc = sqlite3_step(stmt);
             if(rc != SQLITE_DONE)
             {

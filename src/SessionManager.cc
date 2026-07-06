@@ -3,31 +3,63 @@
 
 namespace ai_chat_sdk
 {
+        SessionManager::SessionManager(const std::string dbName)
+        : _dataManager(dbName)
+        {
+            _dataManager.initDataBase();
+            auto sessions = _dataManager.getAllSessions();
+            for(auto session : sessions)
+            {
+                _sessions[session->_sessionId] = session;
+            }
+        }
+
         std::string SessionManager::createSession(const std::string& modelName)
         {
+            _mutex.lock();   
+            std::lock_guard<std::mutex> lock(_mutex);
             std::string sessionId = generateSessionId();
             std::shared_ptr<Session> session = std::make_shared<Session>(modelName);
             session->_sessionId = sessionId;
-            _sessions[sessionId] = session;
             session->_createAt = time(nullptr);
+            session->_updatedAt = session->_createdAt;
+
+
+            _sessions[sessionId] = session;
+            _mutex.unlock();
+
+            _dataManager.insertSession(session);
             return sessionId;
         }
         std::shared_ptr<Session> SessionManager::getSession(const std::string& sessionId)
         {
-            mutex::lock_guard<std::mutex> lock(_mutex);
+            _mutex.lock();
             auto it = _sessions.find(sessionId);
-            if(it == _sessions.end())
+            if(it != _sessions.end())
             {
-                return nullptr;
+                _mutex.unlock();
+                it->second->_messages = _dataManager.getMessagesBySessionId(sessionId);
+                return it->second;
             }
-            return it->second;
+            _mutex.unlock();
+            auto session = _dataManager.getSession(sessionId);
+            _mutex.lock();
+            if(_sessions.find(sessionId) == _sessions.end())
+            {
+                _sessions[sessionId] = session;
+                _mutex.unlock();
+                return session;
+            }
+            _mutex.unlock();
+            return nullptr;
         }
         bool SessionManager::addMessage(const std::string& sessionId,const Message& message) const
         {
-            mutex::lock_guard<std::mutex> lock(_mutex);
+            _mutex.lock();
             auto it = _sessions.find(sessionId);
             if(it == _sessions.end())
             {
+                _mutex.unlock();
                 return false;
             }
 
@@ -35,31 +67,42 @@ namespace ai_chat_sdk
             newMessage._id = generateMessageId(it->second->_messages.size());
             it->second->_messages.push_back(newMessage);
             it->second->_updateAt = time(nullptr);
+            _mutex.unlock();
+
+            _dataManager.insertMessage(newMessage);
             return true;
         }
         std::vector<Message> SessionManager::getHistroyMessages(const std::string& sessionId)
         {
-            mutex::lock_guard<std::mutex> lock(_mutex);
+            _mutex.lock();
             auto it = _sessions.find(sessionId);
             if(it == _sessions.end())
             {
+                _mutex.unlock();
                 return {};
             }
-            return it->second->_messages;
+            _mutex.unlock();
+            auto messages = _dataManager.getSessionMessage(sessionId);
+            return messages;
         }
         void SessionManager::updateSessionTimestamp(const std::string& sessionId)
         {
-            mutex::lock_guard<std::mutex> lock(_mutex);
+            _mutex.lock();
             auto it = _sessions.find(sessionId);
             if(it == _sessions.end())
             {
+                _mutex.unlock();
                 return;
             }
             it->second->_updateAt = time(nullptr);
+            _mutex.unlock();
+            _dataManager.updateSessionTimestamp(sessionId , it->second->_updateAt);
         }
         std::vector<std::string> SessionManager::getSessionLists() const
         {
-            mutex::lock_guard<std::mutex> lock(_mutex);
+            std::vector<Message> messages = _dataManager.getAllMessages();
+
+            _mutex.lock();
             std::vector<std::pair<std::time_t , std::shared_ptr<Session>>> temp;
             for(auto it = _sessions.begin() ; it != _sessions.end() ; it++)
             {
@@ -74,6 +117,15 @@ namespace ai_chat_sdk
             {
                 sessionIds.push_back(it->second->_sessionId);
             }
+
+            for(auto message : messages)
+            {
+                if(sessionIds.find(message._sessionId) == sessionIds.end())
+                {
+                    sessionIds.push_back(message._sessionId);
+                }
+            }
+            _mutex.unlock();
             return sessionIds;
 
         }
@@ -86,12 +138,17 @@ namespace ai_chat_sdk
                 return false;
             }
             _sessions.erase(it);
+            _mutex.unlock();
+            _dataManager.deleteSession(sessionId);
             return true;
         }
         void SessionManager::clearAllSessions()
         {
-            mutex::lock_guard<std::mutex> lock(_mutex);
+            _mutex.lock();
             _sessions.clear();
+            _mutex.unlock();
+            _dataManager.clearAllSessions();
+
         }
         size_t SessionManager::getSessionCount()
         {

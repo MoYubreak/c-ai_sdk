@@ -8,12 +8,14 @@
 #include<atomic>
 #include<mutex>
 #include"common.h"
+#include"DataManager.h"
 
 namespace ai_chat_sdk
 {
     class SessionManager
     {
     public:
+        SessionManager(const std::string dbName = "ai_chat.db");
         std::string createSession(const std::string& modelName);
         std::shared_ptr<Session> getSession(const std::string& sessionId);
         bool addMessage(const std::string& sessionId,const Message& message) const;
@@ -30,5 +32,6 @@ namespace ai_chat_sdk
         std::unordered_map<std::string , std::shared_ptr<Session>> _sessions;
         mutable std::mutex _mutex;
         std::atomic<int64_t> _sessionCounter;
+        DataManager _dataManager;
     }
 }

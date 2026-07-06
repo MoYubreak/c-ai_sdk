@@ -22,9 +22,10 @@ namespace ai_chat_sdk
         std::vector<std::string> getAllSessionIds() const;
         std::vector<std::shared_ptr<Session>> getAllSessions() const;
         int getSessionCount() const;
+        void clearAllSessions();
 
         bool insertMessage(const std::string& sessionId , const Message& message);
-        std::vector<std::shared_ptr<Message>> getSessionMessage(const std::string& sessionId)const;
+        std::vector<Message> getSessionMessage(const std::string& sessionId)const;
         bool deleteSessionMessage(const std::string& sessionId);
         
     private:
