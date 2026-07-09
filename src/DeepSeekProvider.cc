@@ -19,12 +19,11 @@ namespace ai_chat_sdk
             
             //配置Base URL
             auto baseUrl = modelConfig.find("base_URL");
-            if(baseUrl == modelConfig.end())
+            if(baseUrl != modelConfig.end())
             {
-                ERR("base_URL is not found in modelConfig");
-                return false;
+                _endPoint = baseUrl->second;
             }
-            _endPoint = baseUrl->second;
+            _endPoint = "https://api.deepseek.com";
 
             _isAvailable = true;
             return true;

@@ -15,7 +15,12 @@ add_executable(testProvider testProvider.cc
 ../src/ChatGPTProvider.cc
 ../src/GeminiProvider.cc
 ../src/OllamaLLMProvider.cc
-../src/until/mylog.cc)
+../src/until/mylog.cc
+../src/DataManager.cc
+../src/SessionManager.cc
+../src/ChatSDK.cc
+../src/LLMManager.cc)
+
 #添加可执行程序的输出目录
 set_target_properties(testProvider PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -32,4 +37,4 @@ include_directories(${OPENSSL_INCLUDE_DIR}/../include)
 target_compile_definitions(testProvider PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
 
 #链接库
-target_link_libraries(testProvider jsoncpp fmt spdlog gtest OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(testProvider jsoncpp fmt spdlog gtest OpenSSL::SSL OpenSSL::Crypto sqlite3)

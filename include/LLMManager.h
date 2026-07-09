@@ -6,14 +6,16 @@
 #include<memory>
 #include"httplib.h"
 #include"common.h"
+#include"LLMProvider.h"
 
 namespace ai_chat_sdk
 {
     class LLMManager
     {
     public:
+        LLMManager();
         bool registerProvider(const std::string& modelName , std::unique_ptr<LLMProvider> provider);
-        void initModel(const std::string& modelName , const std::map<std::string , std::string>& modelParam);
+        bool initModel(const std::string& modelName , const std::map<std::string , std::string>& modelParam);
         std::vector<ModelInfo> getAvailableModels() const;
         bool isModelAvailable(const std::string& modelName) const;
         std::string sendMessage(const std::string& modelName , const std::vector<Message>& messages , const std::map<std::string , std::string>& requestParam);

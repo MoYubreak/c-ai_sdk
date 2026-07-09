@@ -20,10 +20,10 @@ namespace ns_logger
         static std::shared_ptr<spdlog::logger> _logger;
         static std::mutex _mutex;
     };
-    #define TRACE(format,...) ns_logger::Logger::getLogger()->trace(std::string("[{\:>10s}\:{\:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
-    #define INFO(format,...) ns_logger::Logger::getLogger()->info(std::string("[{\:>10s}\:{\:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
-    #define DBG(format,...) ns_logger::Logger::getLogger()->debug(std::string("[{\:>10s}\:{\:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
-    #define WARN(format,...) ns_logger::Logger::getLogger()->warn(std::string("[{\:>10s}\:{\:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
-    #define ERR(format,...) ns_logger::Logger::getLogger()->error(std::string("[{\:>10s}\:{\:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
-    #define CRI(format,...) ns_logger::Logger::getLogger()->critical(std::string("[{\:>10s}\:{\:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
+    #define TRACE(format,...) ns_logger::Logger::getLogger()->trace(std::string("[{:>10s}:{:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
+    #define INFO(format,...) ns_logger::Logger::getLogger()->info(std::string("[{:>10s}:{:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
+    #define DBG(format,...) ns_logger::Logger::getLogger()->debug(std::string("[{:>10s}:{:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
+    #define WARN(format,...) ns_logger::Logger::getLogger()->warn(std::string("[{:>10s}:{:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
+    #define ERR(format,...) ns_logger::Logger::getLogger()->error(std::string("[{:>10s}:{:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
+    #define CRI(format,...) ns_logger::Logger::getLogger()->critical(std::string("[{:>10s}:{:<4d}]") + format , __FILE__ , __LINE__ , ##__VA_ARGS__)
 }

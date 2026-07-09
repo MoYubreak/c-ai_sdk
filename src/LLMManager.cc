@@ -1,8 +1,14 @@
 #include"../include/LLMManager.h"
 #include"../include/until/mylog.h"
+#include <iostream>
 
 namespace ai_chat_sdk
 {
+    LLMManager::LLMManager()
+    {
+        std::cout << "LLMManager constructor starting..." << std::endl;
+    }
+
     bool LLMManager::registerProvider(const std::string& modelName , std::unique_ptr<LLMProvider> provider)
     {
         if(!provider)
@@ -15,17 +21,18 @@ namespace ai_chat_sdk
         _modelInfos[modelName] = ModelInfo(modelName);
         return true;
     }
-    void LLMManager::initModel(const std::string& modelName , const std::map<std::string , std::string>& modelParam)
+    bool LLMManager::initModel(const std::string& modelName , const std::map<std::string , std::string>& modelParam)
     {
         auto provider = _providers.find(modelName);
         if(provider == _providers.end())
         {
             ERR("model {} not registered" , modelName);
-            return;
+            return false;
         }
         provider->second->initModel(modelParam);
-        _modelInfos[modelName]._isAvailable = provider->second->isAvailable();
+        _modelInfos[modelName]._isAvailable = true;
         _modelInfos[modelName]._modelDesc = provider->second->getModelDesc();
+        return true;
     }
     std::vector<ModelInfo> LLMManager::getAvailableModels() const
     {
@@ -44,9 +51,10 @@ namespace ai_chat_sdk
         auto model = _modelInfos.find(modelName);
         if(model == _modelInfos.end())
         {
-            ERR("model {} not registered" , modelName);
+            INFO("LLMManager::isModelAvailable: model {} not registered, returning false" , modelName);
             return false;
         }
+        INFO("LLMManager::isModelAvailable: model {}, available = {}" , modelName, model->second._isAvailable);
         return model->second._isAvailable;
     }
     std::string LLMManager::sendMessage(const std::string& modelName , const std::vector<Message>& messages , const std::map<std::string , std::string>& requestParam)

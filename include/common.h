@@ -20,13 +20,19 @@ namespace ai_chat_sdk
         std::string _modelName;
         double _temperature;
         int _maxTokens;
+        virtual ~Config() = default;
     };
 
     struct APIConfig:public Config
     {
         std::string _apiKey;
     };
-
+    struct OllamaConfig : public Config
+    {
+        std::string _modelName;
+        std::string _modelDesc;
+        std::string _endpoint;
+    };
     struct ModelInfo
     {
         std::string _modelName;

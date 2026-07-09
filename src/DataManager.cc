@@ -45,10 +45,10 @@ namespace ai_chat_sdk
                 ERR("DataManager::insertSession: sqlite3_prepare_v2 failed: {}", sqlite3_errmsg(_db));
                 return false;
             }
-            sqlite3_bind_text(stmt, 1, session.sessionId.c_str(), -1, SQLITE_STATIC);
-            sqlite3_bind_text(stmt, 2, session.modelName.c_str(), -1, SQLITE_STATIC);
-            sqlite3_bind_int64(stmt, 3, static_cast<int64_t>(session._createdAt));
-            sqlite3_bind_int64(stmt, 4, static_cast<int64_t>(session._updatedAt));
+            sqlite3_bind_text(stmt, 1, session._sessionId.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_text(stmt, 2, session._modelName.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_int64(stmt, 3, static_cast<int64_t>(session._createAt));
+            sqlite3_bind_int64(stmt, 4, static_cast<int64_t>(session._updateAt));
             rc = sqlite3_step(stmt);
             if(rc != SQLITE_DONE)
             {
@@ -76,26 +76,27 @@ namespace ai_chat_sdk
             sqlite3_bind_text(stmt, 1, sessionId.c_str(), -1, SQLITE_STATIC);
 
             rc = sqlite3_step(stmt);
-            if(rc != SQLITE_DONE)
+            if(rc != SQLITE_ROW)
             {
                 sqlite3_finalize(stmt);
                 return nullptr;
             }
 
             // 从结果集中提取数据
-            std::string modelName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-            int64_t createTime = sqlite3_column_int64(stmt, 1);
-            int64_t updateTime = sqlite3_column_int64(stmt, 2);
+            std::string sessionIdRes = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            std::string modelName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            int64_t createTime = sqlite3_column_int64(stmt, 2);
+            int64_t updateTime = sqlite3_column_int64(stmt, 3);
 
 
             Session session;
-            session.sessionId = sessionId;
-            session.modelName = modelName;
-            session._createdAt = createTime;
-            session._updatedAt = updateTime;
+            session._sessionId = sessionId;
+            session._modelName = modelName;
+            session._createAt = createTime;
+            session._updateAt = updateTime;
             sqlite3_finalize(stmt);
 
-            session.messages = getSessionMessage(sessionId);
+            session._messages = getSessionMessage(sessionId);
             return std::make_shared<Session>(session);
         }
 
@@ -170,7 +171,7 @@ namespace ai_chat_sdk
             }
 
             std::vector<std::string> sessionIds;
-            while(rc = sqlite3_step(stmt) == SQLITE_ROW)
+            while((rc = sqlite3_step(stmt)) == SQLITE_ROW)
             {
                 sessionIds.push_back(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
             }
@@ -210,8 +211,8 @@ namespace ai_chat_sdk
                 int64_t createTime = sqlite3_column_int64(stmt, 2);
                 int64_t updateTime = sqlite3_column_int64(stmt, 3);
                 Session session;
-                session.sessionId = sessionId;
-                session.modelName = modelName;
+                session._sessionId = sessionId;
+                session._modelName = modelName;
                 session._createAt  = createTime;
                 session._updateAt = updateTime;
                 sessions.push_back(std::make_shared<Session>(session));
@@ -282,8 +283,8 @@ namespace ai_chat_sdk
         {
             std::lock_guard<std::mutex> lock(_mutex);
             std::string insertSQL = R"(
-                INSERT INTO message (message_id, role, content, timestamp)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO message (message_id, session_id, role, content, timestamp)
+                VALUES (?, ?, ?, ?, ?)
             )";
 
             sqlite3_stmt* stmt;
@@ -293,10 +294,11 @@ namespace ai_chat_sdk
                 ERR("DataManager::insertMessage: sqlite3_prepare_v2 failed: {}", sqlite3_errmsg(_db));
                 return false;
             }
-            sqlite3_bind_text(stmt, 1, message._messageId.c_str(), -1, SQLITE_STATIC);
-            sqlite3_bind_text(stmt, 2, message._role.c_str(), -1, SQLITE_STATIC);
-            sqlite3_bind_text(stmt, 3, message._content.c_str(), -1, SQLITE_STATIC);
-            sqlite3_bind_int64(stmt, 4, static_cast<int64_t>(message._timestamp));
+            sqlite3_bind_text(stmt, 1, message._messageId.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 2, sessionId.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 3, message._role.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 4, message._content.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_int64(stmt, 5, static_cast<int64_t>(message._timestamp));
 
             rc = sqlite3_step(stmt);
             if(rc != SQLITE_DONE)
@@ -334,7 +336,7 @@ namespace ai_chat_sdk
             return true;
         }
         
-        std::vector<Message> DataManager::getSessionMessage(const std::string& sessionId)const;
+        std::vector<Message> DataManager::getSessionMessage(const std::string& sessionId)const
         {
             std::lock_guard<std::mutex> lock(_mutex);
             std::string sql = R"(
@@ -347,13 +349,16 @@ namespace ai_chat_sdk
                 ERR("DataManager::getSessionMessage: sqlite3_prepare_v2 failed: {}", sqlite3_errmsg(_db));
                 return {};
             }
+
+            sqlite3_bind_text(stmt, 1, sessionId.c_str(), -1, SQLITE_STATIC);
+
             std::vector<Message> messages;
-            while(rc = sqlite3_step(stmt) == SQLITE_ROW)
+            while((rc = sqlite3_step(stmt)) == SQLITE_ROW)
             {
                 Message message;
-                message._messageId = sqlite3_column_text(stmt, 0);
-                message._role = sqlite3_column_text(stmt, 1);
-                message._content = sqlite3_column_text(stmt, 2);
+                message._messageId = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+                message._role = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+                message._content = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
                 message._timestamp = sqlite3_column_int64(stmt, 3);
                 messages.push_back(message);
             }
@@ -400,7 +405,7 @@ namespace ai_chat_sdk
             std::string createSessionTable = R"(
                 CREATE TABLE IF NOT EXISTS session (
                     session_id TEXT PRIMARY KEY,
-                    model_name TEXT NOTNULL,
+                    model_name TEXT NOT NULL,
                     create_time INTEGER NOT NULL,
                     update_time INTEGER NOT NULL
                 );
@@ -417,13 +422,14 @@ namespace ai_chat_sdk
                     role TEXT NOT NULL,
                     content TEXT NOT NULL,
                     timestamp INTEGER NOT NULL,
-                    FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
+                    FOREIGN KEY (session_id) REFERENCES session(session_id) ON DELETE CASCADE
                 );
             )";
             if(!execSQL(createMessageTable))
             {
                 return false;
             }
+            return true;
         }
 
         bool DataManager::execSQL(const std::string& sql)

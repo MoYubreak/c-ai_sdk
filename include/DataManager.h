@@ -1,11 +1,13 @@
+#pragma once
 #include<sqlite3.h>
 #include<string>
 #include<mutex>
 #include<memory>
-#include<time>
+#include<time.h>
 #include<vector>
 #include<iostream>
 #include"common.h"
+#include"./until/mylog.h"
 
 namespace ai_chat_sdk
 {
