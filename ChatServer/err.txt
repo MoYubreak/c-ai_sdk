@@ -1,0 +1,158 @@
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc: In constructor ‘ai_chat_server::ChatServer::ChatServer(const ai_chat_server::ServerConfig&)’:
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:10:9: error: ‘ASSERT_TRUE’ was not declared in this scope
+   10 |         ASSERT_TRUE(deepseekConfig != nullptr);
+      |         ^~~~~~~~~~~
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:13:9: error: ‘ASSERT_FALSE’ was not declared in this scope
+   13 |         ASSERT_FALSE(deepseekConfig->_apiKey.empty());
+      |         ^~~~~~~~~~~~
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc: At global scope:
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:64:10: error: no declaration matches ‘void ai_chat_server::ChatServer::start()’
+   64 |     void ChatServer::start()
+      |          ^~~~~~~~~~
+In file included from /root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:1:
+/root/ZZT/c-ai_sdk/ChatServer/ChatServer.h:29:14: note: candidate is: ‘bool ai_chat_server::ChatServer::start()’
+   29 |         bool start();
+      |              ^~~~~
+/root/ZZT/c-ai_sdk/ChatServer/ChatServer.h:24:11: note: ‘class ai_chat_server::ChatServer’ defined here
+   24 |     class ChatServer
+      |           ^~~~~~~~~~
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc: In member function ‘std::string ai_chat_server::ChatServer::createResponse(const string&, bool)’:
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:107:42: error: no matching function for call to ‘Json::StreamWriter::StreamWriter(Json::StreamWriterBuilder&)’
+  107 |         Json::StreamWriter writer(builder);
+      |                                          ^
+In file included from /usr/include/jsoncpp/json/json.h:13,
+                 from /root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:2:
+/usr/include/jsoncpp/json/writer.h:45:3: note: candidate: ‘Json::StreamWriter::StreamWriter()’
+   45 |   StreamWriter();
+      |   ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:45:3: note:   candidate expects 0 arguments, 1 provided
+/usr/include/jsoncpp/json/writer.h:41:16: note: candidate: ‘constexpr Json::StreamWriter::StreamWriter(const Json::StreamWriter&)’
+   41 | class JSON_API StreamWriter {
+      |                ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:41:16: note:   no known conversion for argument 1 from ‘Json::StreamWriterBuilder’ to ‘const Json::StreamWriter&’
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:107:28: error: cannot declare variable ‘writer’ to be of abstract type ‘Json::StreamWriter’
+  107 |         Json::StreamWriter writer(builder);
+      |                            ^~~~~~
+In file included from /usr/include/jsoncpp/json/json.h:13,
+                 from /root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:2:
+/usr/include/jsoncpp/json/writer.h:41:16: note:   because the following virtual functions are pure within ‘Json::StreamWriter’:
+   41 | class JSON_API StreamWriter {
+      |                ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:54:15: note:     ‘virtual int Json::StreamWriter::write(const Json::Value&, Json::OStream*)’
+   54 |   virtual int write(Value const& root, OStream* sout) = 0;
+      |               ^~~~~
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc: In member function ‘std::string ai_chat_server::ChatServer::handleCreateSessionRequest(const httplib::Request&, httplib::Response&)’:
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:144:42: error: no matching function for call to ‘Json::StreamWriter::StreamWriter(Json::StreamWriterBuilder&)’
+  144 |         Json::StreamWriter writer(builder);
+      |                                          ^
+In file included from /usr/include/jsoncpp/json/json.h:13,
+                 from /root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:2:
+/usr/include/jsoncpp/json/writer.h:45:3: note: candidate: ‘Json::StreamWriter::StreamWriter()’
+   45 |   StreamWriter();
+      |   ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:45:3: note:   candidate expects 0 arguments, 1 provided
+/usr/include/jsoncpp/json/writer.h:41:16: note: candidate: ‘constexpr Json::StreamWriter::StreamWriter(const Json::StreamWriter&)’
+   41 | class JSON_API StreamWriter {
+      |                ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:41:16: note:   no known conversion for argument 1 from ‘Json::StreamWriterBuilder’ to ‘const Json::StreamWriter&’
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:144:28: error: cannot declare variable ‘writer’ to be of abstract type ‘Json::StreamWriter’
+  144 |         Json::StreamWriter writer(builder);
+      |                            ^~~~~~
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc: In member function ‘std::string ai_chat_server::ChatServer::handleGetSessionListsRequest(const httplib::Request&, httplib::Response&)’:
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:180:42: error: no matching function for call to ‘Json::StreamWriter::StreamWriter(Json::StreamWriterBuilder&)’
+  180 |         Json::StreamWriter writer(builder);
+      |                                          ^
+In file included from /usr/include/jsoncpp/json/json.h:13,
+                 from /root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:2:
+/usr/include/jsoncpp/json/writer.h:45:3: note: candidate: ‘Json::StreamWriter::StreamWriter()’
+   45 |   StreamWriter();
+      |   ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:45:3: note:   candidate expects 0 arguments, 1 provided
+/usr/include/jsoncpp/json/writer.h:41:16: note: candidate: ‘constexpr Json::StreamWriter::StreamWriter(const Json::StreamWriter&)’
+   41 | class JSON_API StreamWriter {
+      |                ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:41:16: note:   no known conversion for argument 1 from ‘Json::StreamWriterBuilder’ to ‘const Json::StreamWriter&’
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:180:28: error: cannot declare variable ‘writer’ to be of abstract type ‘Json::StreamWriter’
+  180 |         Json::StreamWriter writer(builder);
+      |                            ^~~~~~
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc: In member function ‘std::string ai_chat_server::ChatServer::handleGetModelListsRequest(const httplib::Request&, httplib::Response&)’:
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:189:68: error: ‘using element_type = class ai_chat_sdk::ChatSDK’ {aka ‘class ai_chat_sdk::ChatSDK’} has no member named ‘getModelLists’
+  189 |         std::vector<ai_chat_sdk::ModelInfo> modelLists = _chatSDK->getModelLists();
+      |                                                                    ^~~~~~~~~~~~~
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:206:42: error: no matching function for call to ‘Json::StreamWriter::StreamWriter(Json::StreamWriterBuilder&)’
+  206 |         Json::StreamWriter writer(builder);
+      |                                          ^
+In file included from /usr/include/jsoncpp/json/json.h:13,
+                 from /root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:2:
+/usr/include/jsoncpp/json/writer.h:45:3: note: candidate: ‘Json::StreamWriter::StreamWriter()’
+   45 |   StreamWriter();
+      |   ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:45:3: note:   candidate expects 0 arguments, 1 provided
+/usr/include/jsoncpp/json/writer.h:41:16: note: candidate: ‘constexpr Json::StreamWriter::StreamWriter(const Json::StreamWriter&)’
+   41 | class JSON_API StreamWriter {
+      |                ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:41:16: note:   no known conversion for argument 1 from ‘Json::StreamWriterBuilder’ to ‘const Json::StreamWriter&’
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:206:28: error: cannot declare variable ‘writer’ to be of abstract type ‘Json::StreamWriter’
+  206 |         Json::StreamWriter writer(builder);
+      |                            ^~~~~~
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc: In member function ‘std::string ai_chat_server::ChatServer::handleGetHistroyMessagesRequest(const httplib::Request&, httplib::Response&)’:
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:244:42: error: no matching function for call to ‘Json::StreamWriter::StreamWriter(Json::StreamWriterBuilder&)’
+  244 |         Json::StreamWriter writer(builder);
+      |                                          ^
+In file included from /usr/include/jsoncpp/json/json.h:13,
+                 from /root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:2:
+/usr/include/jsoncpp/json/writer.h:45:3: note: candidate: ‘Json::StreamWriter::StreamWriter()’
+   45 |   StreamWriter();
+      |   ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:45:3: note:   candidate expects 0 arguments, 1 provided
+/usr/include/jsoncpp/json/writer.h:41:16: note: candidate: ‘constexpr Json::StreamWriter::StreamWriter(const Json::StreamWriter&)’
+   41 | class JSON_API StreamWriter {
+      |                ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:41:16: note:   no known conversion for argument 1 from ‘Json::StreamWriterBuilder’ to ‘const Json::StreamWriter&’
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:244:28: error: cannot declare variable ‘writer’ to be of abstract type ‘Json::StreamWriter’
+  244 |         Json::StreamWriter writer(builder);
+      |                            ^~~~~~
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc: In member function ‘std::string ai_chat_server::ChatServer::handleSendMessageRequest(const httplib::Request&, httplib::Response&)’:
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:293:57: error: conversion from ‘Json::Value’ to non-scalar type ‘std::string’ {aka ‘std::__cxx11::basic_string<char>’} requested
+  293 |         std::string sessionId = requestJson["session_id"];
+      |                                                         ^
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:294:52: error: conversion from ‘Json::Value’ to non-scalar type ‘std::string’ {aka ‘std::__cxx11::basic_string<char>’} requested
+  294 |         std::string message = requestJson["message"];
+      |                                                    ^
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:323:42: error: no matching function for call to ‘Json::StreamWriter::StreamWriter(Json::StreamWriterBuilder&)’
+  323 |         Json::StreamWriter writer(builder);
+      |                                          ^
+In file included from /usr/include/jsoncpp/json/json.h:13,
+                 from /root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:2:
+/usr/include/jsoncpp/json/writer.h:45:3: note: candidate: ‘Json::StreamWriter::StreamWriter()’
+   45 |   StreamWriter();
+      |   ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:45:3: note:   candidate expects 0 arguments, 1 provided
+/usr/include/jsoncpp/json/writer.h:41:16: note: candidate: ‘constexpr Json::StreamWriter::StreamWriter(const Json::StreamWriter&)’
+   41 | class JSON_API StreamWriter {
+      |                ^~~~~~~~~~~~
+/usr/include/jsoncpp/json/writer.h:41:16: note:   no known conversion for argument 1 from ‘Json::StreamWriterBuilder’ to ‘const Json::StreamWriter&’
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:323:28: error: cannot declare variable ‘writer’ to be of abstract type ‘Json::StreamWriter’
+  323 |         Json::StreamWriter writer(builder);
+      |                            ^~~~~~
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc: In member function ‘std::string ai_chat_server::ChatServer::handleSendMessageStreamRequest(const httplib::Request&, httplib::Response&)’:
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:343:57: error: conversion from ‘Json::Value’ to non-scalar type ‘std::string’ {aka ‘std::__cxx11::basic_string<char>’} requested
+  343 |         std::string sessionId = requestJson["session_id"];
+      |                                                         ^
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:344:52: error: conversion from ‘Json::Value’ to non-scalar type ‘std::string’ {aka ‘std::__cxx11::basic_string<char>’} requested
+  344 |         std::string message = requestJson["message"];
+      |                                                    ^
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc: In lambda function:
+/root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:362:76: error: cannot convert ‘const string’ {aka ‘const std::__cxx11::basic_string<char>’} to ‘const char*’
+  362 |                 std::string sseData = "data: " + Json::valueToQuotedString(chunk) + "\n\n";
+      |                                                                            ^~~~~
+      |                                                                            |
+      |                                                                            const string {aka const std::__cxx11::basic_string<char>}
+In file included from /usr/include/jsoncpp/json/json.h:13,
+                 from /root/ZZT/c-ai_sdk/ChatServer/ChatSever.cc:2:
+/usr/include/jsoncpp/json/writer.h:355:49: note:   initializing argument 1 of ‘Json::String Json::valueToQuotedString(const char*)’
+  355 | String JSON_API valueToQuotedString(const char* value);
+      |                                     ~~~~~~~~~~~~^~~~~
+make[2]: *** [CMakeFiles/AIChatServer.dir/build.make:90: CMakeFiles/AIChatServer.dir/ChatSever.cc.o] Error 1
+make[1]: *** [CMakeFiles/Makefile2:83: CMakeFiles/AIChatServer.dir/all] Error 2
+make: *** [Makefile:91: all] Error 2

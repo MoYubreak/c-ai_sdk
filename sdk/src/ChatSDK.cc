@@ -53,6 +53,11 @@ namespace ai_chat_sdk
             return _sessionManager.deleteSession(sessionId);
         }
 
+        std::vector<ModelInfo> ChatSDK::getAvailableModels()const
+        {
+            return _llmManager.getAvailableModels();
+        }
+
         std::vector<Message> ChatSDK::getHistroyMessages(const std::string& sessionId)
         {
             if(!_initialized)
