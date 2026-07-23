@@ -1,5 +1,6 @@
 #include"ChatServer.h"
 #include<jsoncpp/json/json.h>
+#include<fstream>
 
 namespace ai_chat_server
 {
@@ -63,7 +64,47 @@ namespace ai_chat_server
         INFO("setHttpRoutes begin");
         setHttpRoutes();
         INFO("setHttpRoutes end");
-        _chatServer->set_mount_point("/" , "www");
+        
+        // 尝试挂载 www 目录用于静态文件服务
+        // 先尝试多个可能的相对路径，以适应不同的启动目录
+        bool mountSuccess = _chatServer->set_mount_point("/" , "./www");
+        if (!mountSuccess)
+        {
+            mountSuccess = _chatServer->set_mount_point("/" , "../www");
+            if (!mountSuccess)
+            {
+                mountSuccess = _chatServer->set_mount_point("/" , "build/www");
+                if (!mountSuccess)
+                {
+                    WARN("无法挂载 www 目录，请确保启动目录包含 www 子目录");
+                }
+            }
+        }
+        
+        // 添加根路径处理，确保即使挂载失败也能访问首页
+        _chatServer->Get("/", [this](const httplib::Request& req, httplib::Response& res) {
+            // 先检查 ./www/index.html
+            std::ifstream file("./www/index.html");
+            if (!file.is_open())
+            {
+                file.open("../www/index.html");
+            }
+            if (!file.is_open())
+            {
+                file.open("build/www/index.html");
+            }
+            
+            if (file.is_open())
+            {
+                std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                res.set_content(content, "text/html; charset=utf-8");
+            }
+            else
+            {
+                res.status = 404;
+                res.set_content("Not Found", "text/plain");
+            }
+        });
         
         std::thread serverThread([this]()
         {
@@ -101,7 +142,7 @@ namespace ai_chat_server
         return Json::writeString(builder , errResponse);
     }
     //处理创建会话请求
-    std::string ChatServer::handleCreateSessionRequest(const httplib::Request& request , httplib::Response& response)
+    void ChatServer::handleCreateSessionRequest(const httplib::Request& request , httplib::Response& response)
     {
         Json::Reader reader;        
         Json::Value requestJson;
@@ -110,7 +151,7 @@ namespace ai_chat_server
             std::string errResponse = createResponse("parse request body failed" , false);
             response.status =400;
             response.set_content(errResponse , "application/json");
-            return errResponse;
+            return;
         }
 
         std::string modelName = requestJson.get("model" , "deepseek-chat").asString();
@@ -121,7 +162,7 @@ namespace ai_chat_server
             std::string errResponse = createResponse("create session failed" , false);
             response.status =500;
             response.set_content(errResponse , "application/json");
-            return errResponse;
+            return;
         }
 
         Json::Value responseJson;
@@ -137,10 +178,9 @@ namespace ai_chat_server
         std::string responseJsonStr = Json::writeString(builder, responseJson);
         response.status = 200;
         response.set_content(responseJsonStr , "application/json");
-        return responseJsonStr;
     }
     //处理获取会话列表请求
-    std::string ChatServer::handleGetSessionListsRequest(const httplib::Request& request , httplib::Response& response)
+    void ChatServer::handleGetSessionListsRequest(const httplib::Request& request , httplib::Response& response)
     {
         std::vector<std::string> sessionLists = _chatSDK->getSessionLists();
         Json::Value dataArray(Json::arrayValue);
@@ -172,10 +212,9 @@ namespace ai_chat_server
         std::string responseJsonStr = Json::writeString(builder, responseJson);
         response.status = 200;
         response.set_content(responseJsonStr , "application/json");
-        return responseJsonStr;
     }
     //处理获取模型列表请求
-    std::string ChatServer::handleGetModelListsRequest(const httplib::Request& request , httplib::Response& response)
+    void ChatServer::handleGetModelListsRequest(const httplib::Request& request , httplib::Response& response)
     {
         std::vector<ai_chat_sdk::ModelInfo> modelLists = _chatSDK->getAvailableModels();
         Json::Value dataArray(Json::arrayValue);
@@ -197,10 +236,9 @@ namespace ai_chat_server
         std::string responseJsonStr = Json::writeString(builder, responseJson);
         response.status = 200;
         response.set_content(responseJsonStr , "application/json");
-        return responseJsonStr;
     }
     //处理获取历史消息请求
-    std::string ChatServer::handleGetHistroyMessagesRequest(const httplib::Request& request , httplib::Response& response)
+    void ChatServer::handleGetHistroyMessagesRequest(const httplib::Request& request , httplib::Response& response)
     {
         std::string sessionId = request.matches[1];
         auto session = _chatSDK->getSession(sessionId);
@@ -209,7 +247,7 @@ namespace ai_chat_server
             std::string errResponse = createResponse("session not found" , false);
             response.status =404;
             response.set_content(errResponse , "application/json");
-            return errResponse;
+            return;
         }
         std::vector<ai_chat_sdk::Message> messages = session->_messages;
         
@@ -234,10 +272,9 @@ namespace ai_chat_server
         std::string responseJsonStr = Json::writeString(builder, responseJson);
         response.status = 200;
         response.set_content(responseJsonStr , "application/json");
-        return responseJsonStr;
     }
     //处理删除会话请求
-    std::string ChatServer::handleDeleteSessionRequest(const httplib::Request& request , httplib::Response& response)
+    void ChatServer::handleDeleteSessionRequest(const httplib::Request& request , httplib::Response& response)
     {
         std::string sessionId = request.matches[1];
         if(sessionId.empty())
@@ -245,7 +282,7 @@ namespace ai_chat_server
             std::string errResponse = createResponse("session not found" , false);
             response.status =404;
             response.set_content(errResponse , "application/json");
-            return errResponse;
+            return;
         }
         
 
@@ -255,18 +292,16 @@ namespace ai_chat_server
             std::string errResponse = createResponse("delete session failed" , false);
             response.status =500;
             response.set_content(errResponse , "application/json");
-            return errResponse;
         }
         else
         {
             std::string responseSuccess = createResponse("delete session success" , true);
             response.status = 200;
             response.set_content(responseSuccess , "application/json");
-            return responseSuccess;
         }
     }
     //处理发送消息请求---全量返回
-    std::string ChatServer::handleSendMessageRequest(const httplib::Request& request , httplib::Response& response)
+    void ChatServer::handleSendMessageRequest(const httplib::Request& request , httplib::Response& response)
     {
         Json::Reader reader;        
         Json::Value requestJson;
@@ -276,7 +311,7 @@ namespace ai_chat_server
 
             response.status =400;
             response.set_content(errResponse , "application/json");
-            return errResponse;
+            return;
         }
 
         std::string sessionId = requestJson["session_id"].asString();
@@ -287,7 +322,7 @@ namespace ai_chat_server
 
             response.status =400;
             response.set_content(errResponse , "application/json");
-            return errResponse;
+            return;
         }
 
         std::string result = _chatSDK->sendMessage(sessionId , message);
@@ -296,7 +331,7 @@ namespace ai_chat_server
             std::string errResponse = createResponse("send message failed" , false);
             response.status =500;
             response.set_content(errResponse , "application/json");
-            return errResponse;
+            return;
         }
 
         Json::Value data;
@@ -313,10 +348,9 @@ namespace ai_chat_server
         std::string responseJsonStr = Json::writeString(builder, responseData);
         response.status = 200;
         response.set_content(responseJsonStr , "application/json");
-        return responseJsonStr;
     }
     //处理发送消息流请求---流式返回
-    std::string ChatServer::handleSendMessageStreamRequest(const httplib::Request& request , httplib::Response& response)
+    void ChatServer::handleSendMessageStreamRequest(const httplib::Request& request , httplib::Response& response)
     {
         Json::Reader reader;        
         Json::Value requestJson;
@@ -326,7 +360,7 @@ namespace ai_chat_server
 
             response.status =400;
             response.set_content(errResponse , "application/json");
-            return errResponse;
+            return;
         }
 
         std::string sessionId = requestJson["session_id"].asString();
@@ -337,7 +371,7 @@ namespace ai_chat_server
 
             response.status =400;
             response.set_content(errResponse , "application/json");
-            return errResponse;
+            return;
         }
 
         response.set_header("Cache-Control" , "no-cache");
@@ -346,6 +380,12 @@ namespace ai_chat_server
         response.set_header("Access-Control-Allow-Headers", "*");      // 允许所有请求头
 
         response.set_chunked_content_provider("text/event-stream" , [this , request , response , sessionId , message](size_t offset , httplib::DataSink& dataSink){
+
+            // 防止 httplib 多次调用 provider（offset > 0 表示重入）
+            if (offset > 0) {
+                dataSink.done();
+                return false;
+            }
 
             auto writeChunk  = [&dataSink](const std::string& chunk , bool isFinish)
             {
@@ -370,10 +410,8 @@ namespace ai_chat_server
 
             std::string result = _chatSDK->sendMessageStream(sessionId , message , writeChunk );
 
-            return false;
+            return true;
         });
-
-        return "";
     }
 
 
@@ -391,7 +429,9 @@ namespace ai_chat_server
 
         // 处理获取模型列表请求
         _chatServer->Get("/api/models", [this](const httplib::Request& request, httplib::Response& response){
+            INFO("进入Get模型列表方法");
             handleGetModelListsRequest(request, response);
+            INFO("退出Get模型列表方法");
         });
 
         // 处理删除会话请求

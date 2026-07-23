@@ -34,19 +34,19 @@ namespace ai_chat_server
         //构造错误响应
         std::string createResponse(const std::string& message, bool sucess);
         //处理创建会话请求
-        std::string handleCreateSessionRequest(const httplib::Request& request , httplib::Response& response);
+        void handleCreateSessionRequest(const httplib::Request& request , httplib::Response& response);
         //处理获取会话列表请求
-        std::string handleGetSessionListsRequest(const httplib::Request& request , httplib::Response& response);
+        void handleGetSessionListsRequest(const httplib::Request& request , httplib::Response& response);
         //处理获取模型列表请求
-        std::string handleGetModelListsRequest(const httplib::Request& request , httplib::Response& response);
+        void handleGetModelListsRequest(const httplib::Request& request , httplib::Response& response);
         //处理获取历史消息请求
-        std::string handleGetHistroyMessagesRequest(const httplib::Request& request , httplib::Response& response);
+        void handleGetHistroyMessagesRequest(const httplib::Request& request , httplib::Response& response);
         //处理删除会话请求
-        std::string handleDeleteSessionRequest(const httplib::Request& request , httplib::Response& response);
+        void handleDeleteSessionRequest(const httplib::Request& request , httplib::Response& response);
         //处理发送消息请求---全量返回
-        std::string handleSendMessageRequest(const httplib::Request& request , httplib::Response& response);
+        void handleSendMessageRequest(const httplib::Request& request , httplib::Response& response);
         //处理发送消息流请求---流式返回
-        std::string handleSendMessageStreamRequest(const httplib::Request& request , httplib::Response& response);
+        void handleSendMessageStreamRequest(const httplib::Request& request , httplib::Response& response);
 
         //路由规则绑定
         void setHttpRoutes();
